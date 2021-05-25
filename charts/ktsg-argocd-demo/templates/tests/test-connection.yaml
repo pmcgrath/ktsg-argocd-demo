@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "ktsg-argocd-demo.fullname" . }}-test-connection"
+  labels:
+    {{- include "ktsg-argocd-demo.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+  - args:
+    - '{{ include "ktsg-argocd-demo.fullname" . }}:{{ .Values.service.port }}'
+    command:
+    - wget
+    image: busybox:latest
+    name: wget
+    resources:
+      limits:
+        cpu: 25m
+        memory: 30Mi
+      requests:
+        cpu: 25m
+        memory: 30Mi
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+      runAsGroup: 65534                         # nobody
+      runAsNonRoot: true
+      runAsUser: 65534                          # nobody
+  restartPolicy: Never

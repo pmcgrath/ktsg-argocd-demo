@@ -1,0 +1,69 @@
+# See   https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#       https://docs.github.com/en/actions/reference/environment-variables
+#
+# Have no image caching here at this time
+
+name: release
+
+
+on:
+  push:
+   tags: '*'
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - id: metadata
+      name: Metadata - version, build date, etc.
+      run: |
+        version=${GITHUB_SHA::6}                        # Same as: git rev-parse --short HEAD
+        [[ ${GITHUB_REF} == refs/tags/* ]] && version=${GITHUB_REF/refs\/tags\//}
+
+        echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        echo ::set-output name=IMAGE::ghcr.io/${GITHUB_REPOSITORY}:${version}
+        echo ::set-output name=VERSION::${version}
+
+    - id: buildx
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1               # See https://github.com/docker/build-push-action
+
+    - name: Login to ghcr.io registry
+      uses: docker/login-action@v1
+      with:
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+
+    - id: build-and-publish-image
+      name: Build and publish image
+      uses: docker/build-push-action@v2                 # See https://github.com/docker/build-push-action, have no caching here at this time
+      with:
+        builder: ${{ steps.buildx.outputs.name }}
+        build-args: |
+          VERSION=${{ steps.metadata.outputs.VERSION }}
+        context: ./app/
+        labels: |
+          org.opencontainers.image.title=${{ github.event.repository.name }}
+          org.opencontainers.image.description=${{ github.event.repository.description }}
+          org.opencontainers.image.source=${{ github.event.repository.html_url }}
+          org.opencontainers.image.url=${{ github.event.repository.html_url }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.version=${{ steps.metadata.outputs.VERSION }}
+          org.opencontainers.image.created=${{ steps.metadata.outputs.BUILD_DATE }}
+        push: true
+        tags: ${{ steps.metadata.outputs.IMAGE }}
+
+    - name: Image digest
+      run: echo ${{ steps.build-and-publish-image.outputs.digest }}
+
+    - name: Publish helm chart
+      uses: stefanprodan/helm-gh-pages@master           # See https://github.com/stefanprodan/helm-gh-pages, could not use offical one with tags, see https://github.com/helm/chart-releaser-action/issues/60
+      with:
+        app_version: ${{ steps.metadata.outputs.VERSION }}
+        chart_version: ${{ steps.metadata.outputs.VERSION }}
+        token: ${{ secrets.GITHUB_TOKEN }}

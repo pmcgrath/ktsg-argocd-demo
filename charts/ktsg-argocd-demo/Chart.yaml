@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: v0.1.5
+description: KTSG ArgoCD Demo
+name: ktsg-argocd-demo
+type: application
+version: 0.1.5

@@ -1,0 +1,5 @@
+# Should not exist as we are in a sub directory
+.git
+
+# Local build binary
+ktsg-argocd-demo
