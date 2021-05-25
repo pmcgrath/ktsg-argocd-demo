@@ -1,0 +1,1 @@
+# ktsg-argocd-demo
