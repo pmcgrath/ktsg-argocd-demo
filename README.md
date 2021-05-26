@@ -11,7 +11,16 @@ Will use
 To keep this simple we will NOT cover
 - Ingress options
 - Bootstraping k8s addons etc. with ArgoCD
-- ArgoCD configuration options for External access, SSO, Team provileges etc.
+- ArgoCD configuration options for external access, SSO, team privileges etc.
+
+
+
+## Branches
+| Branch   | Purpose                         |
+| ---------| --------------------------------|
+| main     | App source code and Helm chart  |
+| gh-pages | Helm chart repository           |
+
 
 
 
@@ -34,6 +43,38 @@ There are 2 workflows
 - Publish a Helm chart version
 
 
+### Artificats
+OCI image
+```
+docker image pull ghcr.io/pmcgrath/ktsg-argocd-demo:v0.1.0
+```
+
+Helm chart repository - note the Url is different as I have other gh-pages repos
+```
+helm repo add ktsg-argocd-demo https://pmcgrath.net/ktsg-argocd-demo/
+```
+
+
+
+## CD
+PENDING
+
+
+
+## Run book
+Get ArgoCD up and running
+```
+# Start k8s
+make kind-up
+
+# Install ArgoCD - no ingress
+make install-argocd
+
+# Open ArgoCD UI via port forwarding - Can see at localhost:8080
+make port-forward-argocd-ui
+```
+
+
 
 ## References
 - [GitHub pages creation for existing repo](https://gist.github.com/ramnathv/2227408#gistcomment-2915143)
@@ -42,3 +83,4 @@ There are 2 workflows
 - [GitOps Guide to the Galaxy](https://www.youtube.com/playlist?list=PLaR6Rq6Z4IqfGCkI28cUMbNhPhsnj4nq3) - Lots of ArgoCD content
 - [FluxCD](https://fluxcd.io/docs/) - Alternative to ArgoCD
 - [Tekton](https://tekton.dev/) - Alternative low level building blocks for GitOps workflows on k8s
+- [podinfo](https://github.com/stefanprodan/podinfo) - Good reference re Helm content and GitHub actions

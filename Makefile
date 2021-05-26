@@ -40,16 +40,17 @@ stop-container:
 
 
 # k8s cluster targets
+install-argocd:
+	@# See https://argoproj.github.io/argo-cd/getting_started/#1-install-argo-cd
+	@kubectl create namespace argocd || true
+	@kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+	@kubectl wait deployment/argocd-server -n argocd --for=condition=available
+
 kind-down:
 	@kind delete cluster --name ${CLUSTER_NAME}
 
 kind-up:
 	@kind create cluster --name ${CLUSTER_NAME} --config cluster.yaml
-
-install-argocd:
-	@# See https://argoproj.github.io/argo-cd/getting_started/#1-install-argo-cd
-	@kubectl create namespace argocd || true
-	@kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 port-forward-argocd-ui:
 	@printf "Use the following to login username: admin and password: "
