@@ -1,5 +1,9 @@
+# See   https://granulate.io/kubernetes-autoscaling-the-hpa/
+#       https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+# To see the v2betav2 options: kubectl explain --api-version autoscaling/v2beta2 hpa.spec
+
 {{- if .Values.autoscaling.enabled }}
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
@@ -8,18 +12,22 @@ metadata:
 spec:
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
-    {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
-    {{- end }}
-    {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        targetAverageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
-    {{- end }}
+  {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+        type: Utilization
+    type: Resource
+  {{- end }}
+  {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+  - resource:
+      name: memory
+      target:
+        averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+        type: Utilization
+  {{- end }}
+    type: Resource
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   scaleTargetRef:
     apiVersion: apps/v1
