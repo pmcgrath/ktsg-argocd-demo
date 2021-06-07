@@ -12,12 +12,14 @@ on:
     branches:
     - main
     paths:
+    - .github/workflows/**
     - app/**
     - charts/**
   push:
     branches:
     - main
     paths:
+    - .github/workflows/**
     - app/**
     - charts/**
 
