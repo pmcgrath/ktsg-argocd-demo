@@ -52,6 +52,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Execute Trivy source vulnerability scan
+      uses: aquasecurity/trivy-action@master            # See https://github.com/aquasecurity/trivy-action
+      with:
+        exit-code: 1
+        ignore-unfixed: true
+        scan-ref: ./app/
+        scan-type: fs
+        severity: HIGH,CRITICAL
+
     - id: buildx
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1               # See https://github.com/docker/build-push-action
@@ -64,6 +73,14 @@ jobs:
         load: true                                      # See load at https://github.com/marketplace/actions/build-and-push-docker-images
         push: false
         tags: ${{ github.repository }}:test
+
+    - name: Execute Trivy image vulnerability scan
+      uses: aquasecurity/trivy-action@master            # See https://github.com/aquasecurity/trivy-action
+      with:
+        exit-code: 1
+        ignore-unfixed: true
+        image-ref: ${{ github.repository }}:test
+        severity: HIGH,CRITICAL
 
     - name: Test image
       run: |
