@@ -12,12 +12,14 @@ on:
     branches:
     - main
     paths:
+    - .github/workflows/**
     - app/**
     - charts/**
   push:
     branches:
     - main
     paths:
+    - .github/workflows/**
     - app/**
     - charts/**
 
@@ -34,12 +36,14 @@ jobs:
 
     - name: Helm lint
       run: |
-        helm lint charts/ktsg-argocd-demo
+        chart_name=$(echo "${{ github.repository }}" | awk -F '/' '{print $2}')
+        helm lint charts/${chart_name}
 
     - name: Template prod Helm chart content
       run: |
+        chart_name=$(echo "${{ github.repository }}" | awk -F '/' '{print $2}')
         mkdir generated-yaml
-        helm template -n demo charts/ktsg-argocd-demo/ -f charts/ktsg-argocd-demo/values-prod.yaml > generated-yaml/all.yaml
+        helm template -n demo charts/${chart_name}/ -f charts/${chart_name}/values-prod.yaml > generated-yaml/all.yaml
 
     - name: Lint with kube-linter
       uses: stackrox/kube-linter-action@v1.0.2          # See https://github.com/stackrox/kube-linter-action
@@ -51,6 +55,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Execute Trivy source vulnerability scan
+      uses: aquasecurity/trivy-action@master            # See https://github.com/aquasecurity/trivy-action
+      with:
+        exit-code: 1
+        ignore-unfixed: true
+        scan-ref: ./app/
+        scan-type: fs
+        severity: HIGH,CRITICAL
 
     - id: buildx
       name: Set up Docker Buildx
@@ -65,8 +78,16 @@ jobs:
         push: false
         tags: ${{ github.repository }}:test
 
+    - name: Execute Trivy image vulnerability scan
+      uses: aquasecurity/trivy-action@master            # See https://github.com/aquasecurity/trivy-action
+      with:
+        exit-code: 1
+        ignore-unfixed: true
+        image-ref: ${{ github.repository }}:test
+        severity: HIGH,CRITICAL
+
     - name: Test image
       run: |
         docker container run --detach --name test -p 5000:5000 ${{ github.repository }}:test
-        curl -v localhost:5000/
+        curl -f -v localhost:5000/
         docker container rm --force test
